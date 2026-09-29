@@ -2,8 +2,8 @@
   "name": "hono",
   "type": "module",
   "scripts": {
-    "dev": "vc dev --listen 3031",
-    "dev2": "tsx watch src/serve.ts",
+    "vc-dev": "vc dev --listen 3031",
+    "dev": "tsx watch src/serve.ts",
     "dev:prepare": "pnpm format && pnpm lint:fix",
     "test": "vitest run",
     "lint": "eslint .",

@@ -1,28 +1,115 @@
-Prerequisites:
+# Critiplay — API
 
-- [Vercel CLI](https://vercel.com/docs/cli) installed globally
+![Status](https://img.shields.io/badge/status-work%20in%20progress-orange)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![TypeScript](https://img.shields.io/badge/typescript-5.9-3178C6?logo=typescript&logoColor=white)
+![Hono](https://img.shields.io/badge/hono-4-E36002?logo=hono&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/postgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![Drizzle ORM](https://img.shields.io/badge/ORM-Drizzle-C5F74F)
 
-To develop locally:
+REST API powering Critiplay, a game store platform (similar to itch.io) designed with a better mobile-first interface.
+
+> ⚠️ **Status:** Work in progress — features and endpoints are subject to change.
+
+## Tech Stack
+
+| Domain        | Technology                                       |
+| ------------- | ------------------------------------------------ |
+| Language      | TypeScript 5.9                                   |
+| Framework     | Hono 4 (`@hono/node-server`)                     |
+| Database      | PostgreSQL (local: Supabase CLI)                 |
+| ORM           | Drizzle ORM + Drizzle Kit (migrations)           |
+| Auth          | Supabase (`@supabase/server`, JWT sessions)      |
+| Testing       | Vitest                                           |
+| Quality       | ESLint, Prettier                                 |
+| Deploy        | Vercel (Analytics + Speed Insights)              |
+| Package Mgr   | pnpm 11                                          |
+
+## Prerequisites
+
+- Node.js ≥ 20
+- pnpm ≥ 11 (`corepack enable`)
+- Supabase CLI (for the local database)
+- Docker (required by Supabase CLI)
+
+## Installation
+
+```bash
+pnpm install
+pnpm run db:start
+pnpm run db:migrate
+pnpm run dev
+```
+
+Then open http://localhost:3000 (or the port reported in the console).
+
+### Environment Variables
+
+Create a `.env` file based on the following variables:
+
+| Variable                   | Description                                    |
+| -------------------------- | ---------------------------------------------- |
+| `DATABASE_URL`             | PostgreSQL connection string (Supabase local)  |
+| `SUPABASE_URL`             | Supabase project URL (required)                |
+| `SUPABASE_PUBLISHABLE_KEY` | Supabase publishable/anon key (required)       |
+| `ORIGINS`                  | Comma-separated list of allowed CORS origins   |
+| `PORT`                     | Server port (default: `3031`)                  |
+
+## Scripts
+
+| Command             | Description                                   |
+| ------------------- | --------------------------------------------- |
+| `pnpm dev`          | Start the dev server (tsx watch)              |
+| `pnpm test`         | Run the test suite (Vitest)                   |
+| `pnpm lint`         | Lint the codebase (ESLint)                    |
+| `pnpm lint:fix`     | Lint and auto-fix                             |
+| `pnpm format`       | Format the codebase (Prettier)                |
+| `pnpm format:check` | Check formatting without writing              |
+| `pnpm typecheck`    | Type-check with tsc (no emit)                 |
+| `pnpm db:start`     | Start local Supabase stack                    |
+| `pnpm db:stop`      | Stop local Supabase stack                     |
+| `pnpm db:reset`     | Reset local Supabase (no backup)              |
+| `pnpm db:generate`  | Generate a new SQL migration from the schema  |
+| `pnpm db:migrate`   | Apply pending migrations                       |
+| `pnpm db:push`      | Push schema directly (no migration file)      |
+| `pnpm vc-dev`       | Run with the Vercel dev runtime (port 3031)    |
+
+## Architecture
 
 ```
-npm install
-vc dev
+src/
+├── index.ts          # Hono app setup: CORS, auth middleware, routes
+├── serve.ts          # Node server entry point
+├── db/
+│   ├── connect.ts    # postgres.js client + Drizzle instance
+│   ├── index.ts      # Schema exports (Drizzle Kit entrypoint)
+│   ├── enums/        # PostgreSQL enums (roles, statuses, platforms…)
+│   ├── models/       # Table definitions (games, organizations, profiles…)
+│   ├── migrations/   # Generated SQL migrations (Drizzle Kit)
+│   └── repositories/ # Query layer (data access per domain)
+├── routes/           # HTTP handlers (game, organization, user, feedback)
+│   └── auth/         # Auth routes: guest (login/register) & protected
+└── types/            # Shared TypeScript types
+
+supabase/             # Local Supabase configuration
+tests/                # Integration tests (Vitest)
 ```
 
-```
-open http://localhost:3000
+### Key Concepts
+
+- **Routes** — HTTP handlers mounted on the Hono app; public routes vs. Supabase-protected routes.
+- **Repositories** — data-access layer isolating SQL queries from handlers (`games`, `organizations`, `tags`, `users`).
+- **Enums** — PostgreSQL enums for feedback statuses/types, organization roles, platforms (Windows, macOS, Linux, Android, iOS) and severities.
+- **Migrations** — SQL files generated by Drizzle Kit, versioned in `src/db/migrations/`.
+
+## Testing
+
+Tests live in `tests/` and cover the auth routes (login, register) via Vitest:
+
+```bash
+pnpm test
 ```
 
-To build locally:
+## License
 
-```
-npm install
-vc build
-```
-
-To deploy:
-
-```
-npm install
-vc deploy
-```
+This project is licensed under the [MIT License](LICENSE).
